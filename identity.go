@@ -4,9 +4,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var AuthenticateUser func(token string, conn Conn) *User
+var AuthenticateUser func(token string, conn Conn) Identity
 
-type User struct {
+type Identity interface {
+	UserId() int64
+	UserName() string
+	UserRole() string
+	CheckRole(role string) bool
+}
+
+type UserBase struct {
 	Id       int64  `json:"id"`
 	Name     string `json:"name"`
 	Email    string `json:"email"`
@@ -16,7 +23,19 @@ type User struct {
 	Role     string `json:"role"`
 }
 
-func (p *User) GenerateToken() error {
+func (u *UserBase) UserId() int64 {
+	return u.Id
+}
+
+func (u *UserBase) UserName() string {
+	return u.Name
+}
+
+func (u *UserBase) UserRole() string {
+	return u.Role
+}
+
+func (p *UserBase) GenerateToken() error {
 	b, err := bcrypt.GenerateFromPassword([]byte(p.Password+p.Name+p.Email), 10)
 	if err != nil {
 		return err
@@ -25,7 +44,7 @@ func (p *User) GenerateToken() error {
 	return nil
 }
 
-func (p *User) SetPassword(pwd string) error {
+func (p *UserBase) SetPassword(pwd string) error {
 	password, err := bcrypt.GenerateFromPassword([]byte(pwd), 10)
 	if err != nil {
 		return err
@@ -34,7 +53,7 @@ func (p *User) SetPassword(pwd string) error {
 	return nil
 }
 
-func (p *User) ComparePassword(pwd string) bool {
+func (p *UserBase) ComparePassword(pwd string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(p.Password), []byte(pwd))
 	if err != nil {
 		return false
@@ -42,7 +61,7 @@ func (p *User) ComparePassword(pwd string) bool {
 	return true
 }
 
-func (p *User) CheckRole(role string) bool {
+func (p *UserBase) CheckRole(role string) bool {
 	if p != nil {
 		if p.Role == role {
 			return true

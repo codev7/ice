@@ -5,42 +5,10 @@ import (
 	"io"
 	"log"
 	"net/http"
-
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
 )
-
-var Db gorm.DB
 
 func init() {
 	loadConfig()
-	initDB()
-}
-
-func initDB() {
-	var err error
-	Db, err = gorm.Open("mysql", Config.DBUser+":"+Config.DBPassword+"@"+Config.DBHost+"/"+Config.DBName+"?parseTime=true")
-	if err != nil {
-		panic("DB opening failed " + err.Error())
-	}
-
-	Db.AutoMigrate(&User{})
-	p := User{}
-	Db.First(&p)
-	if Db.NewRecord(p) {
-		//seed the db
-		for _, v := range []User{
-			User{Name: "nirandas", Email: "nirandas@gmail.com", Role: "admin"},
-			User{Name: "nidheeshdas", Email: "nidheeshdas@gmail.com", Role: "admin"},
-		} {
-			p := User{Name: v.Name, Email: v.Email, Active: true, Role: v.Role}
-			p.SetPassword("test")
-			p.GenerateToken()
-			if Db.Save(&p).Error != nil {
-				panic("Seeding error " + err.Error())
-			}
-		}
-	}
 }
 
 type Request interface {

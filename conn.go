@@ -1,22 +1,21 @@
 package ice
 
 import (
-	"net/http"
-
 	"github.com/gorilla/websocket"
+	"net/http"
 )
 
 type Conn interface {
 	Send(cmd string, data interface{})
 	SendErrors(cmd string, errors interface{})
-	SetUser(user *User)
-	User() *User
+	SetUser(user Identity)
+	User() Identity
 }
 
 type APIConn struct {
 	writer http.ResponseWriter
 	req    *http.Request
-	user   *User
+	user   Identity
 }
 
 func (c *APIConn) Send(cmd string, msg interface{}) {
@@ -33,17 +32,17 @@ func (c *APIConn) SendErrors(cmd string, errors interface{}) {
 	})
 }
 
-func (c *APIConn) SetUser(user *User) {
+func (c *APIConn) SetUser(user Identity) {
 	c.user = user
 }
 
-func (c *APIConn) User() *User {
+func (c *APIConn) User() Identity {
 	return c.user
 }
 
 type SocketConn struct {
 	*websocket.Conn
-	user *User
+	user Identity
 }
 
 func (c *SocketConn) Send(cmd string, msg interface{}) {
@@ -60,10 +59,10 @@ func (c *SocketConn) SendErrors(cmd string, errors interface{}) {
 	})
 }
 
-func (c *SocketConn) SetUser(user *User) {
+func (c *SocketConn) SetUser(user Identity) {
 	c.user = user
 }
 
-func (c *SocketConn) User() *User {
+func (c *SocketConn) User() Identity {
 	return c.user
 }
