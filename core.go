@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	loadConfig()
+	LoadConfig()
 }
 
 type Request interface {
