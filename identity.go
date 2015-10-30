@@ -14,7 +14,7 @@ type Identity interface {
 }
 
 type UserBase struct {
-	Id       int64  `json:"id"`
+	Id       int64  `json:"id" gorm:"primary_key"`
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Active   bool   `json:"active"`

@@ -19,6 +19,7 @@ func main() {
 
 	if os.Args[1] == "migration" {
 		migration.Process(os.Args[2:])
+return 
 	}
-
+fmt.Println("Cannot understand the command")
 }
