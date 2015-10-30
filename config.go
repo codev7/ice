@@ -1,12 +1,12 @@
 package ice
 
 import (
-	_ "log"
 	"os"
 	"path"
 )
 
 type config struct {
+	ConfigRoot                string
 	Name, Version             string
 	ServerAddress             string
 	DBType, DBURL             string
@@ -27,7 +27,7 @@ func LoadConfig() {
 
 	fs, err := os.Open(cp)
 	if err != nil {
-		panic("Error opening config file " + cp)
+		panic("Error opening config file " + cp + err.Error())
 	}
 	defer fs.Close()
 
@@ -35,4 +35,9 @@ func LoadConfig() {
 	if err != nil {
 		panic("Error parsing config file " + err.Error())
 	}
+	Config.ConfigRoot = path.Dir(cp)
+	if !path.IsAbs(Config.MigrationPath) {
+		Config.MigrationPath = path.Clean(path.Join(Config.ConfigRoot, Config.MigrationPath))
+	}
+
 }

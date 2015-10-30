@@ -20,6 +20,9 @@ func ListMigrations(migration string) ([]string, []string) {
 	}
 	found := false
 	for _, f := range fs {
+		if !strings.HasSuffix(f.Name(), ".sql") {
+			continue
+		}
 		p := path.Join(ice.Config.MigrationPath, f.Name())
 		if found {
 			next = append(next, p)

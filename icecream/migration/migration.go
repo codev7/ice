@@ -50,11 +50,15 @@ func Process(args []string) {
 
 func handleMake(args []string) {
 	newPath := path.Join(ice.Config.MigrationPath, fmt.Sprintf("%s-%s.sql", time.Now().Format("20060102-150405"), args[1]))
-	ioutil.WriteFile(newPath, []byte(`--icecream:migration:up
+	err := ioutil.WriteFile(newPath, []byte(`--icecream:migration:up
 
 --icecream:migration:down
 
 `), 0)
+	if err != nil {
+		fmt.Println("Failed to write the migration ", err)
+		return
+	}
 	fmt.Println("Migration file created at ", newPath)
 }
 
