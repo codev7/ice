@@ -13,6 +13,7 @@ type config struct {
 	EmailFrom                 string
 	MailgunKey, MailgunDomain string
 	MigrationPath             string
+	Secret                    string
 }
 
 var Config config

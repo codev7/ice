@@ -17,7 +17,7 @@ func socketLoop(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	conn := &SocketConn{ws, (*UserBase)(nil)}
+	conn := &SocketConn{ws, (*UserBase)(nil), ""}
 
 	for {
 		_, reader, err := ws.NextReader()
@@ -42,6 +42,7 @@ func socketLoop(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			continue
 		}
+		conn.cmd = string(cmd[0 : len(cmd)-1])
 		msg.Handle(conn)
 	}
 }
@@ -52,7 +53,7 @@ func handleAPI(cmd string, req Request, w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	conn := &APIConn{w, r, (*UserBase)(nil)}
+	conn := &APIConn{w, r, (*UserBase)(nil), cmd}
 	if token := r.Header.Get("token"); token != "" && AuthenticateUser != nil {
 		AuthenticateUser(token, conn)
 	}
