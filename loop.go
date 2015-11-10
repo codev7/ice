@@ -31,13 +31,11 @@ func socketLoop(w http.ResponseWriter, r *http.Request) {
 			time.Sleep(time.Millisecond * 100)
 			continue
 		}
-
-		factory, ok := handlers[string(cmd[0:len(cmd)-1])]
-		if !ok {
+		msg := makeFromFactory(string(cmd[0 : len(cmd)-1]))
+		if msg == nil {
 			log.Println("not found factory")
 			continue
 		}
-		msg := factory()
 		err = ParseJSON(rd, &msg)
 		if err != nil {
 			continue
@@ -47,9 +45,10 @@ func socketLoop(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleAPI(cmd string, req Request, w http.ResponseWriter, r *http.Request) {
+func handleAPI(cmd string, req RequestHandler, w http.ResponseWriter, r *http.Request) {
 	err := ParseJSON(r.Body, &req)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 
