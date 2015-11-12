@@ -1,7 +1,6 @@
 package ice
 
 import (
-	"fmt"
 	"net/url"
 	"reflect"
 	"regexp"
