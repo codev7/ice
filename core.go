@@ -1,28 +1,17 @@
 package ice
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
-	"reflect"
 	"strings"
+	"time"
 )
 
 func init() {
 	LoadConfig()
-}
-
-type RequestHandler interface {
-	Handle(conn Conn)
-}
-
-type Routable interface {
-	Route() string
-}
-
-type Authorizable interface {
-	Authorize(conn Conn) bool
 }
 
 //parse json from reader
@@ -41,44 +30,38 @@ func EncodeJSON(writer io.Writer, data interface{}) error {
 	return e.Encode(data)
 }
 
-func Start(host string) error {
+func Start(host string, notfound http.HandlerFunc) error {
 	http.HandleFunc("/connect", socketLoop)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		msg := makeFromFactory(r.URL.Path)
+		m, msg := makeFromFactory(strings.ToLower(r.Method), r.URL.Path)
 		if msg == nil {
-			http.ServeFile(w, r, "public/")
+			if notfound != nil {
+				notfound(w, r)
+			} else {
+				ServeAsset(w, r)
+			}
 			return
 		}
-		handleAPI(r.URL.Path, msg.(RequestHandler), w, r)
+		handleAPI(r.URL.Path, msg.(RequestHandler), w, r, m)
 	})
 	log.Println("Listening at " + host)
 	return http.ListenAndServe(host, nil)
 }
 
-var factories map[string]*reflect.Type
-
-func Requests(prefix string, reqs ...RequestHandler) {
-	if factories == nil {
-		factories = make(map[string]*reflect.Type)
+func ServeAsset(w http.ResponseWriter, r *http.Request) {
+	if LoadAsset == nil {
+		http.NotFound(w, r)
+		return
 	}
-	prefix = "/" + strings.Trim(prefix, "/")
-	for _, r := range reqs {
-		v := reflect.ValueOf(r)
-		t := reflect.Indirect(v).Type()
-		routable, ok := r.(Routable)
-		if ok {
-			factories[prefix+routable.Route()] = &t
-		} else {
-			factories[prefix+t.Name()] = &t
-		}
+	path := strings.Trim(r.URL.Path, "/")
+	if path == "" {
+		path = "index.html"
 	}
-}
-
-func makeFromFactory(key string) RequestHandler {
-	t, ok := factories[key]
-	if ok == false {
-		return nil
+	data, err := LoadAsset(path)
+	if err != nil {
+		http.NotFound(w, r)
+		return
 	}
-	return reflect.New(*t).Interface().(RequestHandler)
+	http.ServeContent(w, r, r.URL.Path, time.Now(), bytes.NewReader(data))
 }

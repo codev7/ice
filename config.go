@@ -14,6 +14,7 @@ type config struct {
 	MailgunKey, MailgunDomain string
 	MigrationPath             string
 	Secret                    string
+	Production                bool
 }
 
 var Config config

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	validator "github.com/asaskevich/govalidator"
@@ -31,7 +32,7 @@ func socketLoop(w http.ResponseWriter, r *http.Request) {
 			time.Sleep(time.Millisecond * 100)
 			continue
 		}
-		msg := makeFromFactory(string(cmd[0 : len(cmd)-1]))
+		_, msg := makeFromFactory("", string(cmd[0:len(cmd)-1]))
 		if msg == nil {
 			log.Println("not found factory")
 			continue
@@ -45,11 +46,27 @@ func socketLoop(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleAPI(cmd string, req RequestHandler, w http.ResponseWriter, r *http.Request) {
-	err := ParseJSON(r.Body, &req)
-	if err != nil {
-		log.Println(err)
-		return
+func handleAPI(cmd string, req RequestHandler, w http.ResponseWriter, r *http.Request, routeData map[string]string) {
+	var err error
+	method := strings.ToLower(r.Method)
+
+	if r.Header.Get("content-type") == "application/json" {
+		if method != "get" {
+			err = ParseJSON(r.Body, &req)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+		}
+	}
+
+	if fv, ok := req.(FormValuesSetter); ok {
+		r.ParseForm()
+		for k, v := range routeData {
+			r.Form[k] = []string{v}
+		}
+		fv.SetFormValues(r.Form)
+		fv.ParseForm(req)
 	}
 
 	conn := &APIConn{w, r, (*UserBase)(nil), cmd}
