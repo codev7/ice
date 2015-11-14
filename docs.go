@@ -2,8 +2,7 @@
 package ice
 
 import (
-	"fmt"
-	//"reflect"
+//"reflect"
 )
 
 type APIDescription interface {
@@ -54,7 +53,7 @@ func (r *DocsRequest) Handle(conn Conn) {
 		}
 		docs = append(docs, doc)
 	}
-	err := conn.SendView("docs.html", map[string]interface{}{
+	conn.SendView("docs.html", map[string]interface{}{
 		"title": Config.Name,
 		"docs":  docs,
 	})
