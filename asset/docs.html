@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+<title>API Docs - {{.title}}</title>
+</head>
+<body>
+{{range .docs}}
+<div class="api">
+<h3>{{.Route}}</h3>
+<p>{{range .Formats}}<span>{{.}}</span>{{end}}</p>
+<p>
+<ul>
+{{range .Fields}}
+<li>{{.}}</li>
+{{end}}
+</ul>
+</p>
+<p>
+{{.Description}}
+</p>
+</div>
+{{end}}
+</body>
+</html>

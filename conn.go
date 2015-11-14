@@ -1,7 +1,6 @@
 package ice
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"net/http"
@@ -58,11 +57,11 @@ func (c *APIConn) SendView(name string, data interface{}) error {
 	if v == nil {
 		return fmt.Errorf("Could not load view %s", name)
 	}
-	b, err := v.Bytes(data)
+	b, err := v.Render(data)
 	if err != nil {
 		return err
 	}
-	http.ServeContent(c.writer, c.req, c.req.URL.Path, time.Now(), bytes.NewReader(b))
+	http.ServeContent(c.writer, c.req, c.req.URL.Path, time.Now(), b)
 	return nil
 }
 

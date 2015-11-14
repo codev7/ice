@@ -1,6 +1,7 @@
 package ice
 
 import (
+	"net/http"
 	"net/url"
 	"reflect"
 	"regexp"
@@ -18,6 +19,16 @@ type Routable interface {
 
 type Authorizable interface {
 	Authorize(conn Conn) bool
+}
+
+type JsonValuesSetter interface {
+	ParseJSON(tg interface{}, r *http.Request)
+}
+
+type JsonValues struct {
+}
+
+func (jv *JsonValues) ParseJSON(tg interface{}, r *http.Request) {
 }
 
 type FormValuesSetter interface {
@@ -145,6 +156,10 @@ func (r *Route) Match(method string, url string) (map[string]string, bool) {
 	return m, true
 }
 
+func (r *Route) NewRequest() RequestHandler {
+	return reflect.New(*r.Type).Interface().(RequestHandler)
+}
+
 var factories []*Route
 
 func Requests(prefix string, reqs ...RequestHandler) {
@@ -161,9 +176,9 @@ func Requests(prefix string, reqs ...RequestHandler) {
 				panic(routable.Route() + " must specify the method and url")
 			}
 			factories = append(factories, &Route{
-				Pattern: parts[1],
+				Pattern: prefix + parts[1],
 				Method:  parts[0],
-				Regexp:  regexp.MustCompile(parts[1]),
+				Regexp:  preparePattern(prefix + parts[1]),
 				Type:    &t,
 			})
 		} else {
@@ -172,10 +187,18 @@ func Requests(prefix string, reqs ...RequestHandler) {
 	}
 }
 
+func preparePattern(pattern string) *regexp.Regexp {
+	exp := `{([a-z]+)(:([^}]+))?}`
+	r := regexp.MustCompile(exp)
+	re := r.ReplaceAllString(pattern, "(?P<$1>$2)")
+	re = "^" + strings.Replace(re, ">)", ">\\w+)", -1) + "$"
+	return regexp.MustCompile(re)
+}
+
 func makeFromFactory(method string, url string) (map[string]string, RequestHandler) {
 	for _, r := range factories {
 		if m, ok := r.Match(method, url); ok {
-			return m, reflect.New(*r.Type).Interface().(RequestHandler)
+			return m, r.NewRequest()
 		}
 	}
 	return nil, nil

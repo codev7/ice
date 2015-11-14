@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"io"
 	"sync"
 )
 
@@ -26,7 +27,10 @@ func getTemplate(name string) (*template.Template, error) {
 	}
 	data, err := LoadAsset(name)
 	if err != nil {
-		return nil, err
+		data, err = Asset(name)
+		if err != nil {
+			return nil, err
+		}
 	}
 	t, err = template.New(name).Parse(string(data))
 	if err != nil {
@@ -54,8 +58,8 @@ func NewView(name string) *view {
 	return v
 }
 
-func (v *view) Bytes(data interface{}) ([]byte, error) {
-	b := bytes.NewBuffer(nil)
-	err := v.Template.Execute(b, data)
-	return b.Bytes(), err
+func (v *view) Render(data interface{}) (io.ReadSeeker, error) {
+	var b bytes.Buffer
+	err := v.Template.Execute(&b, data)
+	return bytes.NewReader(b.Bytes()), err
 }
