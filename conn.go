@@ -18,14 +18,18 @@ type Conn interface {
 	ResponseWriter() http.ResponseWriter
 }
 
-type APIConn struct {
+type HttpConn interface {
+	Conn
+}
+
+type HttpRequest struct {
 	writer http.ResponseWriter
 	req    *http.Request
 	user   Identity
 	cmd    string
 }
 
-func (c *APIConn) Send(cmd string, msg interface{}) {
+func (c *HttpRequest) Send(cmd string, msg interface{}) {
 	if cmd == "" {
 		cmd = c.cmd
 	}
@@ -35,7 +39,7 @@ func (c *APIConn) Send(cmd string, msg interface{}) {
 	})
 }
 
-func (c *APIConn) SendErrors(cmd string, errors interface{}) {
+func (c *HttpRequest) SendErrors(cmd string, errors interface{}) {
 	if cmd == "" {
 		cmd = c.cmd
 	}
@@ -45,14 +49,14 @@ func (c *APIConn) SendErrors(cmd string, errors interface{}) {
 	})
 }
 
-func (c *APIConn) SendRaw(cmd string, data []byte) {
+func (c *HttpRequest) SendRaw(cmd string, data []byte) {
 	if cmd == "" {
 		cmd = c.cmd
 	}
 	c.writer.Write(data)
 }
 
-func (c *APIConn) SendView(name string, data interface{}) error {
+func (c *HttpRequest) SendView(name string, data interface{}) error {
 	v := NewView(name)
 	if v == nil {
 		return fmt.Errorf("Could not load view %s", name)
@@ -65,16 +69,16 @@ func (c *APIConn) SendView(name string, data interface{}) error {
 	return nil
 }
 
-func (c *APIConn) SetUser(user Identity) {
+func (c *HttpRequest) SetUser(user Identity) {
 	c.user = user
 }
 
-func (c *APIConn) User() Identity {
+func (c *HttpRequest) User() Identity {
 	return c.user
 }
 
-func (c *APIConn) Request() *http.Request              { return c.req }
-func (c *APIConn) ResponseWriter() http.ResponseWriter { return c.writer }
+func (c *HttpRequest) Request() *http.Request              { return c.req }
+func (c *HttpRequest) ResponseWriter() http.ResponseWriter { return c.writer }
 
 type SocketConn struct {
 	*websocket.Conn
@@ -126,3 +130,15 @@ func (c *SocketConn) User() Identity {
 
 func (c *SocketConn) Request() *http.Request              { panic("not supported") }
 func (c *SocketConn) ResponseWriter() http.ResponseWriter { panic("Not supported") }
+
+type Response interface {
+	Execute(conn Conn)
+}
+
+type HttpRequestHandler interface {
+	Handle(conn HttpConn) interface{}
+}
+
+type SocketRequestHandler interface {
+	Handle(conn *SocketConn) interface{}
+}

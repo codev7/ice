@@ -2,7 +2,7 @@
 package ice
 
 import (
-//"reflect"
+	"reflect"
 )
 
 type APIDescription interface {
@@ -22,7 +22,7 @@ type apidoc struct {
 	Formats     []string
 }
 
-func (r *DocsRequest) Handle(conn Conn) {
+func (r *DocsRequest) Handle(conn HttpConn) interface{} {
 	var docs []apidoc
 	for _, f := range factories {
 		doc := apidoc{
@@ -31,14 +31,7 @@ func (r *DocsRequest) Handle(conn Conn) {
 		}
 
 		t := *f.Type
-		for i := 0; i < t.NumField(); i++ {
-			field := t.Field(i)
-			if field.Tag.Get("json") == "-" {
-				continue
-			}
-			fd := field.Name + " " + field.Type.Name() + " " + field.Tag.Get("valid") + " " + field.Tag.Get("description")
-			doc.Fields = append(doc.Fields, fd)
-		}
+		params(t, &doc)
 
 		if _, ok := doc.Request.(FormValuesSetter); ok {
 			doc.Formats = append(doc.Formats, "Accept input via path, query string and form post")
@@ -53,8 +46,23 @@ func (r *DocsRequest) Handle(conn Conn) {
 		}
 		docs = append(docs, doc)
 	}
-	conn.SendView("docs.html", map[string]interface{}{
+	return View("docs.html", map[string]interface{}{
 		"title": Config.Name,
 		"docs":  docs,
 	})
+}
+
+func params(t reflect.Type, doc *apidoc) {
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if field.Tag.Get("json") == "-" {
+			continue
+		}
+		if field.Anonymous {
+			params(field.Type, doc)
+		} else {
+			fd := field.Name + " " + field.Type.Name() + " " + field.Tag.Get("valid") + " " + field.Tag.Get("description")
+			doc.Fields = append(doc.Fields, fd)
+		}
+	}
 }

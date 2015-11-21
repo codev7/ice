@@ -9,9 +9,9 @@ import (
 	"strings"
 )
 
-type RequestHandler interface {
-	Handle(conn Conn)
-}
+//type RequestHandler interface {
+//	Handle(conn Conn)
+//}
 
 type Routable interface {
 	Route() string
@@ -29,6 +29,11 @@ type JsonValues struct {
 }
 
 func (jv *JsonValues) ParseJSON(tg interface{}, r *http.Request) {
+	if r.Header.Get("content-type") == "application/json" {
+		if strings.ToLower(r.Method) != "get" {
+			ParseJSON(r.Body, &tg)
+		}
+	}
 }
 
 type FormValuesSetter interface {
@@ -156,13 +161,13 @@ func (r *Route) Match(method string, url string) (map[string]string, bool) {
 	return m, true
 }
 
-func (r *Route) NewRequest() RequestHandler {
-	return reflect.New(*r.Type).Interface().(RequestHandler)
+func (r *Route) NewRequest() interface{} {
+	return reflect.New(*r.Type).Interface()
 }
 
 var factories []*Route
 
-func Requests(prefix string, reqs ...RequestHandler) {
+func Requests(prefix string, reqs ...interface{}) {
 	if prefix != "" {
 		prefix = "/" + strings.Trim(prefix, "/")
 	}
@@ -195,7 +200,7 @@ func preparePattern(pattern string) *regexp.Regexp {
 	return regexp.MustCompile(re)
 }
 
-func makeFromFactory(method string, url string) (map[string]string, RequestHandler) {
+func makeFromFactory(method string, url string) (map[string]string, interface{}) {
 	for _, r := range factories {
 		if m, ok := r.Match(method, url); ok {
 			return m, r.NewRequest()

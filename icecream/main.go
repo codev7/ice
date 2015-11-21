@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/nirandas/ice"
 	"github.com/nirandas/ice/icecream/migration"
+	"github.com/nirandas/ice/icecream/routes"
 	"os"
 )
 
@@ -21,5 +22,11 @@ func main() {
 		migration.Process(os.Args[2:])
 		return
 	}
+
+	if os.Args[1] == "routes" {
+		routes.Process(os.Args[2:])
+		return
+	}
+
 	fmt.Println("Cannot understand the command")
 }

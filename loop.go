@@ -4,10 +4,9 @@ import (
 	"bufio"
 	"log"
 	"net/http"
-	"strings"
+	//	"strings"
 	"time"
 
-	validator "github.com/asaskevich/govalidator"
 	"github.com/gorilla/websocket"
 )
 
@@ -42,22 +41,13 @@ func socketLoop(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		conn.cmd = string(cmd[0 : len(cmd)-1])
-		msg.Handle(conn)
+		(msg.(SocketRequestHandler)).Handle(conn)
 	}
 }
 
-func handleAPI(cmd string, req RequestHandler, w http.ResponseWriter, r *http.Request, routeData map[string]string) {
-	var err error
-	method := strings.ToLower(r.Method)
-
-	if r.Header.Get("content-type") == "application/json" {
-		if method != "get" {
-			err = ParseJSON(r.Body, &req)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-		}
+func handleAPI(cmd string, req interface{}, w http.ResponseWriter, r *http.Request, routeData map[string]string) {
+	if jv, ok := req.(JsonValuesSetter); ok {
+		jv.ParseJSON(req, r)
 	}
 
 	if fv, ok := req.(FormValuesSetter); ok {
@@ -69,7 +59,7 @@ func handleAPI(cmd string, req RequestHandler, w http.ResponseWriter, r *http.Re
 		fv.ParseForm(req)
 	}
 
-	conn := &APIConn{w, r, (*UserBase)(nil), cmd}
+	conn := &HttpRequest{w, r, (*UserBase)(nil), cmd}
 	if token := r.Header.Get("token"); token != "" && AuthenticateUser != nil {
 		AuthenticateUser(token, conn)
 	}
@@ -81,11 +71,16 @@ func handleAPI(cmd string, req RequestHandler, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	_, err = validator.ValidateStruct(req)
-	if err != nil {
-		conn.SendErrors("validation-failed", validator.ErrorsByField(err))
-		return
+	if validator, ok := req.(RequestValidator); ok {
+		validator.Validate(req)
 	}
 
-	req.Handle(conn)
+	data := (req.(HttpRequestHandler)).Handle(conn)
+	if data != nil {
+		if resp, ok := data.(Response); ok {
+			resp.Execute(conn)
+		} else {
+			conn.Send("", data)
+		}
+	}
 }

@@ -2,10 +2,11 @@ package ice
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"io"
+	"net/http"
 	"sync"
+	"time"
 )
 
 var LoadAsset func(name string) ([]byte, error)
@@ -18,14 +19,19 @@ func getTemplate(name string) (*template.Template, error) {
 	if views == nil {
 		views = make(map[string]*template.Template)
 	}
+
 	t, ok := views[name]
 	if ok {
 		return t, nil
 	}
-	if LoadAsset == nil {
-		return nil, fmt.Errorf("Asset Loader (ice.LoadAsset) not set")
+
+	var data []byte
+	var err error
+	if LoadAsset != nil {
+		data, err = LoadAsset(name)
+	} else {
+		data, err = Asset(name)
 	}
-	data, err := LoadAsset(name)
 	if err != nil {
 		data, err = Asset(name)
 		if err != nil {
@@ -62,4 +68,22 @@ func (v *view) Render(data interface{}) (io.ReadSeeker, error) {
 	var b bytes.Buffer
 	err := v.Template.Execute(&b, data)
 	return bytes.NewReader(b.Bytes()), err
+}
+
+func View(name string, data interface{}) Response {
+	v := NewView(name)
+	return &viewResponse{v, data}
+}
+
+type viewResponse struct {
+	*view
+	data interface{}
+}
+
+func (vr *viewResponse) Execute(conn Conn) {
+	b, err := vr.Render(vr.data)
+	if err != nil {
+		panic(err)
+	}
+	http.ServeContent(conn.ResponseWriter(), conn.Request(), conn.Request().URL.Path, time.Now(), b)
 }
