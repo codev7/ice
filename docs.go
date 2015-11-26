@@ -61,7 +61,11 @@ func params(t reflect.Type, doc *apidoc) {
 		if field.Anonymous {
 			params(field.Type, doc)
 		} else {
-			fd := field.Name + " " + field.Type.Name() + " " + field.Tag.Get("valid") + " " + field.Tag.Get("description")
+			name := field.Name
+			if field.Tag.Get("json") != "" {
+				name = field.Tag.Get("json")
+			}
+			fd := name + " " + field.Type.Name() + " " + field.Tag.Get("valid") + " " + field.Tag.Get("description")
 			doc.Fields = append(doc.Fields, fd)
 		}
 	}

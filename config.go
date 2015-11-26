@@ -15,6 +15,11 @@ type config struct {
 	MigrationPath             string
 	Secret                    string
 	Production                bool
+	Settings                  map[string]string
+}
+
+func (c *config) Get(key string) string {
+	return c.Settings[key]
 }
 
 var Config config
@@ -42,4 +47,7 @@ func LoadConfig() {
 		Config.MigrationPath = path.Clean(path.Join(Config.ConfigRoot, Config.MigrationPath))
 	}
 
+	if Config.Settings == nil {
+		Config.Settings = make(map[string]string)
+	}
 }
