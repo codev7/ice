@@ -76,19 +76,19 @@ func (p *UserBase) CheckRole(role string) bool {
 type AnyAuthorizedUser struct{}
 
 func (r *AnyAuthorizedUser) Authorize(conn Conn) bool {
-	return conn.User().CheckRole("*")
+	return conn.User() != nil && conn.User().CheckRole("*")
 }
 
 type OnlyUnauthorizedUser struct{}
 
 func (r *OnlyUnauthorizedUser) Authorize(conn Conn) bool {
-	return conn.User().CheckRole("?")
+	return conn.User() == nil || conn.User().CheckRole("?")
 }
 
 type AnyAdminUser struct{}
 
 func (r *AnyAdminUser) Authorize(conn Conn) bool {
-	return conn.User().CheckRole("admin")
+	return conn.User() != nil && conn.User().CheckRole("admin")
 }
 
 func HmacToken(message interface{}, key []byte) ([]byte, error) {

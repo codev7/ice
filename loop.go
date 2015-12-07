@@ -78,18 +78,15 @@ func handleAPI(cmd string, req interface{}, w http.ResponseWriter, r *http.Reque
 	if token := r.Header.Get("token"); token != "" && AuthenticateUser != nil {
 		AuthenticateUser(token, conn)
 	}
-
 	defer func() {
 		resp := recover()
 		processHttpResponse(resp, conn)
 	}()
-
 	data := HandleHttpRequest(req, conn)
 	processHttpResponse(data, conn)
 }
 
 func processHttpResponse(data interface{}, conn Conn) {
-
 	if data != nil {
 		if resp, ok := data.(Response); ok {
 			resp.Execute(conn)
