@@ -25,7 +25,7 @@ func (v *Validator) Validate(req interface{}) {
 
 func (v Validator) Execute(conn Conn) {
 	if v.Errors != nil {
-		conn.SendErrors("validation-failed", v.Errors)
+		conn.SendErrors("", v.Errors)
 	}
 }
 

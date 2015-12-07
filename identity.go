@@ -76,13 +76,13 @@ func (p *UserBase) CheckRole(role string) bool {
 type AnyAuthorizedUser struct{}
 
 func (r *AnyAuthorizedUser) Authorize(conn Conn) bool {
-	return conn.User() != nil
+	return conn.User().CheckRole("*")
 }
 
 type OnlyUnauthorizedUser struct{}
 
 func (r *OnlyUnauthorizedUser) Authorize(conn Conn) bool {
-	return conn.User() == (*UserBase)(nil)
+	return conn.User().CheckRole("?")
 }
 
 type AnyAdminUser struct{}

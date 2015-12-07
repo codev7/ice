@@ -14,6 +14,10 @@ type DocsRequest struct {
 
 func (r *DocsRequest) Route() string { return "get /docs" }
 
+func (r *DocsRequest) RequestDescription() string {
+	return `Show the route documentation (this page).`
+}
+
 type apidoc struct {
 	Route       string
 	Description string

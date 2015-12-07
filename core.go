@@ -67,12 +67,12 @@ func ServeAsset(w http.ResponseWriter, r *http.Request) {
 }
 
 type IceError struct {
-	message string
-	code    int
+	Message string
+	Code    int
 }
 
 func (r *IceError) Execute(conn Conn) {
-	http.Error(conn.ResponseWriter(), r.message, r.code)
+	http.Error(conn.ResponseWriter(), r.Message, r.Code)
 }
 
 func ServerError(msg string) IceError {
