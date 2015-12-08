@@ -75,14 +75,14 @@ func (r *IceError) Execute(conn Conn) {
 	http.Error(conn.ResponseWriter(), r.Message, r.Code)
 }
 
-func ServerError(msg string) IceError {
-	return IceError{msg, 500}
+func ServerError(msg string) *IceError {
+	return &IceError{msg, 500}
 }
 
-func NotFoundError(msg string) IceError {
-	return IceError{msg, 404}
+func NotFoundError(msg string) *IceError {
+	return &IceError{msg, 404}
 }
 
-func ForbiddenError(msg string) IceError {
-	return IceError{msg, 403}
+func ForbiddenError(msg string) *IceError {
+	return &IceError{msg, 403}
 }
