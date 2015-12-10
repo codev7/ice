@@ -42,3 +42,8 @@ func NewTestConn(user ice.Identity) *TestConn {
 		user: user,
 	}
 }
+
+
+func Handle(r interface{},conn ice.Conn)interface{}{
+return ice.HandleHttpRequest(r,conn)
+}

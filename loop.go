@@ -97,13 +97,12 @@ func processHttpResponse(data interface{}, conn Conn) {
 }
 
 func HandleHttpRequest(req interface{}, conn HttpConn) interface{} {
-	var authorizable Authorizable
-	authorizable, _ = req.(Authorizable)
-	if authorizable != nil && !authorizable.Authorize(conn) {
-		//		http.Error(w, "Forbidden", 403)
-		return ForbiddenError("Request is forbidden")
+	auth, authorizable := req.(Authorizable)
+	if authorizable {
+		if authorized, forbiddenMessage := auth.Authorize(conn); !authorized {
+			return ForbiddenError(forbiddenMessage)
+		}
 	}
-
 	if validator, ok := req.(RequestValidator); ok {
 		validator.Validate(req)
 	}

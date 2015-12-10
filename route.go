@@ -18,7 +18,7 @@ type Routable interface {
 }
 
 type Authorizable interface {
-	Authorize(conn Conn) bool
+	Authorize(conn Conn) (bool, string)
 }
 
 type JsonValuesSetter interface {

@@ -65,6 +65,12 @@ func (p *UserBase) ComparePassword(pwd string) bool {
 }
 
 func (p *UserBase) CheckRole(role string) bool {
+	if role == "*" {
+		return p != nil
+	}
+	if role == "?" {
+		return p == nil
+	}
 	if p != nil {
 		if p.Role == role {
 			return true
@@ -75,20 +81,20 @@ func (p *UserBase) CheckRole(role string) bool {
 
 type AnyAuthorizedUser struct{}
 
-func (r *AnyAuthorizedUser) Authorize(conn Conn) bool {
-	return conn.User() != nil && conn.User().CheckRole("*")
+func (r *AnyAuthorizedUser) Authorize(conn Conn) (bool, string) {
+	return conn.User() != nil && conn.User().CheckRole("*"), "Only authorized users are allowed."
 }
 
 type OnlyUnauthorizedUser struct{}
 
-func (r *OnlyUnauthorizedUser) Authorize(conn Conn) bool {
-	return conn.User() == nil || conn.User().CheckRole("?")
+func (r *OnlyUnauthorizedUser) Authorize(conn Conn) (bool, string) {
+	return conn.User() == nil || conn.User().CheckRole("?"), "Only unauthorized users are allowed."
 }
 
 type AnyAdminUser struct{}
 
-func (r *AnyAdminUser) Authorize(conn Conn) bool {
-	return conn.User() != nil && conn.User().CheckRole("admin")
+func (r *AnyAdminUser) Authorize(conn Conn) (bool, string) {
+	return conn.User() != nil && conn.User().CheckRole("admin"), "Only admin users are allowed."
 }
 
 func HmacToken(message interface{}, key []byte) ([]byte, error) {
