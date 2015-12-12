@@ -15,7 +15,7 @@ func Anonymous(r interface{}, conn HttpConn, next func() interface{}) interface{
 	return ForbiddenError("Only unauthorized users are allowed.")
 }
 
-func Authorized(r interface{}, conn HttpConn, next func() interface{}) interface{} {
+func Authenticated(r interface{}, conn HttpConn, next func() interface{}) interface{} {
 	if conn.User() != nil && conn.User().CheckRole("*") {
 		return next()
 	}
