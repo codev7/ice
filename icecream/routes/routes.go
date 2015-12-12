@@ -39,7 +39,7 @@ func Process(args []string) {
 			log.Fatalf("Error writing output", err)
 		}
 		defer fs.Close()
-		fs.Write([]byte("package " + args[1] + "\r\n\r\n"))
+		fs.Write([]byte("package " + args[1] + "\r\n\r\nimport \"github.com/nirandas/ice\"\r\n\r\n"))
 		io.Copy(fs, &buf)
 	}
 }
@@ -52,12 +52,18 @@ func generate(line string, comments []string, buf io.Writer) bool {
 	if len(parts) < 2 || parts[0] != "type" {
 		return false
 	}
+
 	docs := ""
 	route := ""
+var middleware  []string
+
 	for _, c := range comments {
 		if strings.HasPrefix(c, "route") {
 			route = strings.Trim(c[5:], " ")
-		} else {
+		} else 		if strings.HasPrefix(c, "middleware") {
+			middleware = strings.Split(c[10:], ",")
+			docs = docs + "\r\n" + c
+} else{
 			docs = docs + "\r\n" + c
 		}
 	}
@@ -78,5 +84,19 @@ return "%s"
 `, parts[1], route)))
 	}
 
-	return true
+if len(middleware) != 0{
+for i:=0;i<len(middleware);i=i+1{
+middleware[i] = strings.Trim(middleware[i]," ") 
+if strings.Index(middleware[i], ".") == -1{
+middleware[i] = "ice." + middleware[i]
+}
+}
+buf.Write([]byte(fmt.Sprintf(`
+func (r *%s) Middlewares()[]ice.Middleware{
+ return []ice.Middleware{%s}
+}
+`, parts[1], strings.Join(middleware, ","))))
+}
+
+return true
 }

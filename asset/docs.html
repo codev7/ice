@@ -7,7 +7,10 @@
 {{range .docs}}
 <div class="api">
 <h3>{{.Route}}</h3>
-<p>{{range .Formats}}<span>{{.}}</span>{{end}}</p>
+<pre>
+{{.Description}}
+</pre>
+
 <p>
 <ul>
 {{range .Fields}}
@@ -15,9 +18,9 @@
 {{end}}
 </ul>
 </p>
-<p>
-{{.Description}}
-</p>
+
+<p>{{range .Formats}}<span>{{.}}</span>{{end}}</p>
+
 </div>
 {{end}}
 </body>

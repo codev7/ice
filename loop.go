@@ -97,15 +97,34 @@ func processHttpResponse(data interface{}, conn Conn) {
 }
 
 func HandleHttpRequest(req interface{}, conn HttpConn) interface{} {
-	auth, authorizable := req.(Authorizable)
-	if authorizable {
-		if authorized, forbiddenMessage := auth.Authorize(conn); !authorized {
-			return ForbiddenError(forbiddenMessage)
+	/*
+		auth, authorizable := req.(Authorizable)
+		if authorizable {
+			if authorized, forbiddenMessage := auth.Authorize(conn); !authorized {
+				return ForbiddenError(forbiddenMessage)
+			}
 		}
-	}
+	*/
+
 	if validator, ok := req.(RequestValidator); ok {
 		validator.Validate(req)
 	}
 
-	return (req.(HttpRequestHandler)).Handle(conn)
+	if mwp, ok := req.(MiddlewareProvider); ok {
+		middlewares := mwp.Middlewares()
+		var next func() interface{}
+		next = func() interface{} {
+			n := middlewares[0]
+			middlewares = middlewares[1:]
+			return n(req, conn, next)
+		}
+
+		middlewares = append(middlewares, func(req interface{}, conn HttpConn, next func() interface{}) interface{} {
+			return (req.(HttpRequestHandler)).Handle(conn)
+		})
+
+		return next()
+	} else {
+		return (req.(HttpRequestHandler)).Handle(conn)
+	}
 }
