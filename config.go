@@ -2,7 +2,7 @@ package ice
 
 import (
 	"os"
-	"path"
+path 	"path/filepath"
 )
 
 type config struct {
@@ -24,10 +24,27 @@ func (c *config) Get(key string) string {
 
 var Config config
 
+func findEnv(dir string)string{
+fn:=path.Join(dir,".env")
+_,err:=os.Lstat(fn)
+if err!=nil{
+newDir:=path.Dir(dir)
+if dir == newDir{
+panic("Not inside an ice directory")
+}
+return findEnv(newDir)
+}
+return fn
+}
+
 func LoadConfig() {
 	var cp = os.Getenv("ICECONFIGPATH")
 	if cp == "" {
-		cp = ".env"
+dir,err:=os.Getwd()
+if err!=nil{
+panic(err)
+}
+cp=findEnv(dir)
 	} else {
 		cp = path.Join(path.Clean(cp), ".env")
 	}
