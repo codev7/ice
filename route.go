@@ -29,11 +29,11 @@ type JsonValues struct {
 }
 
 func (jv *JsonValues) ParseJSON(tg interface{}, r *http.Request) {
-	if r.Header.Get("content-type") == "application/json" {
+//	if r.Header.Get("content-type") == "application/json" {
 		if strings.ToLower(r.Method) != "get" {
 			ParseJSON(r.Body, &tg)
 		}
-	}
+//	}
 }
 
 type FormValuesSetter interface {
