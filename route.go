@@ -195,7 +195,7 @@ func Requests(prefix string, reqs ...interface{}) {
 func preparePattern(pattern string) *regexp.Regexp {
 	exp := `{([a-z]+)(:([^}]+))?}`
 	r := regexp.MustCompile(exp)
-	re := r.ReplaceAllString(pattern, "(?P<$1>$2)")
+	re := r.ReplaceAllString(pattern, "(?P<$1>$3)")
 	re = "^" + strings.Replace(re, ">)", ">\\w+)", -1) + "$"
 	return regexp.MustCompile(re)
 }
