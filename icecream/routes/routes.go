@@ -91,9 +91,9 @@ return %s
 	if route != "" {
 		buf.Write([]byte(fmt.Sprintf(`
 func (r *%s) Route()string{
-return "%s"
+return %s
 }
-`, parts[1], route)))
+`, parts[1], "`" + route + "`")))
 	}
 
 	if len(middleware) != 0 {
